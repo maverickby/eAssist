@@ -56,7 +56,7 @@ void EDSysGrp::Scan()
     }
     else
     {
-        logger().WriteLn("Device do not support required commnads to continue...", Qt::red);
+        logger().WriteLn("Device does not support required commands to continue...", Qt::red);
     }
 }
 //------------------------------------------------------------------------------------------------
@@ -83,14 +83,16 @@ bool EDSysGrp::Available() const
 //------------------------------------------------------------------------------------------------
 bool EDSysGrp::CheckChannel()
 {
-    bool res = Run(com_checkchannel);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_checkchannel,result);
 
     return res;
 }
 //------------------------------------------------------------------------------------------------
 bool EDSysGrp::ReqDevInfo(QString &info)
 {
-    bool res = Run(com_reqdevinfo);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_reqdevinfo,result);
 
     if(com_reqdevinfo->getLastResult() == EDCommand::CR_Success)
     {
@@ -103,7 +105,8 @@ bool EDSysGrp::ReqDevInfo(QString &info)
 //------------------------------------------------------------------------------------------------
 bool EDSysGrp::Reset()
 {
-    bool res = Run(com_reset);;
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_reset,result);
 
     return res;
 }
@@ -115,7 +118,8 @@ bool EDSysGrp::SetScanMode(bool state)
 
     com_setscanmode->setScanMode(state);
 
-    bool res = Run(com_setscanmode);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_setscanmode,result);
     if(res) m_scanmode = state;
 
     return res;
@@ -128,7 +132,8 @@ bool EDSysGrp::isScanMode() const
 //------------------------------------------------------------------------------------------------
 bool EDSysGrp::SelfTest(QString &result)
 {
-    bool res = Run(com_selftest);
+	EDCommand::EDCommandResult result_;
+    bool res = Run(com_selftest,result_);
 
     if(com_selftest->getLastResult() == EDCommand::CR_Success)
     {
@@ -141,7 +146,8 @@ bool EDSysGrp::SelfTest(QString &result)
 //------------------------------------------------------------------------------------------------
 bool EDSysGrp::SaveSettings()
 {
-    bool res = Run(com_savesettings);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_savesettings,result);
 
     return res;
 }
@@ -149,7 +155,8 @@ bool EDSysGrp::SaveSettings()
 bool EDSysGrp::TestChannel(const QByteArray &data)
 {
     com_testchanel->setTestSignature(data);
-    bool res = Run(com_testchanel);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_testchanel,result);
 
     return res;
 }

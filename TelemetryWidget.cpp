@@ -3,22 +3,23 @@
 #include <QFileDialog>
 #include "TelemetryWidget.h"
 #include "ED/EDLogger.h"
+#include "mainwindow.h"
 
 static const int coefs[] = {1, 2, 5, 10, 20, 25, 50, 100, 200};
 
 //------------------------------------------------------------------------------------------------------------------------------------------------
-TelemetryWidget::TelemetryWidget(QWidget *parent, ED & ed) :
+TelemetryWidget::TelemetryWidget(QWidget *parent, ED & ed, MainWindow* mainWin) :
     QWidget(parent),
-    m_ed(ed),
+    m_ed(ed), m_mainWindow(mainWin),
     m_telemetry(&ed, this),
-    m_numpoints(1000)
+    m_numpoints(4000)
 {
     // GUI setup
     m_vboxlayout = new QVBoxLayout(this);
     m_plot = new TelemetryPlot(this);
     setup_toolbar();
     m_vboxlayout->addWidget(reinterpret_cast<QWidget*>(m_plot));
-    m_plot->setVisible(false); // untill start adding signals
+    m_plot->setVisible(false); // until start adding signals
     m_toolbar.setVisible(false);
 
     connect(reinterpret_cast<QWidget*>(m_plot), SIGNAL(MarkersChange(double, double)),
@@ -119,6 +120,7 @@ void TelemetryWidget::setup_toolbar()
     m_act_runtime_autoscale = new QAction(this);
     m_act_runtime_autoscale->setText("auto");
     m_act_runtime_autoscale->setCheckable(true);
+	m_act_runtime_autoscale->setChecked(true);
     m_toolbar.addAction(m_act_runtime_autoscale);
     connect(m_act_runtime_autoscale, SIGNAL(triggered(bool)), reinterpret_cast<QWidget*>(m_plot), SLOT(runtime_autoscale(bool)));
     m_toolbar.addSeparator();
@@ -203,7 +205,7 @@ void TelemetryWidget::NewDescriptor()
     }
     m_cb_samplerate->clear();
     m_cb_samplerate->addItems(samplerate_list);
-    m_cb_samplerate->setCurrentIndex(0);
+    m_cb_samplerate->setCurrentIndex(2);
 
     m_act_export_csv->setEnabled(false);
 }
@@ -253,6 +255,8 @@ void TelemetryWidget::Start()
     m_cb_graphtype->setEnabled(false);
 
     m_act_export_csv->setEnabled(false);
+	m_mainWindow->getMenu_System()->setEnabled(false);
+	m_mainWindow->getMenu_Program()->setEnabled(false);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------
 void TelemetryWidget::Pause()
@@ -263,6 +267,12 @@ void TelemetryWidget::Pause()
     m_plot->setAntialiasedPlots(true);
 
     m_act_mode->setIcon(QIcon(":/images/start.png"));
+}
+
+
+void TelemetryWidget::stop()
+{
+	Stop();
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------
 void TelemetryWidget::Stop()
@@ -277,7 +287,10 @@ void TelemetryWidget::Stop()
     m_cb_graphtype->setEnabled(true);
 
     m_act_export_csv->setEnabled(true);
+	m_mainWindow->getMenu_System()->setEnabled(true);
+	m_mainWindow->getMenu_Program()->setEnabled(true);
 }
+Telemetry* TelemetryWidget::getTelemetry() { return &m_telemetry; }
 //------------------------------------------------------------------------------------------------------------------------------------------------
 void TelemetryWidget::toggle_mode()
 {

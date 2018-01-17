@@ -10,6 +10,7 @@
 #include "EDTelCom_SetMode.h"
 #include "EDTel_SignalData.h"
 #include "EDTel_SignalDataBuffer.h"
+//#include "threadtelreaddata.h"
 
 #define TEL_STATUS_OK			0x01
 #define TEL_STATUS_OVERFLOW		0x02
@@ -37,6 +38,8 @@ typedef struct
     int state_wait;
 }   TelStatistics;
 
+class ThreadTelReadData;
+
 // interface to Telemetry group
 class EDTel
 {
@@ -47,7 +50,7 @@ public:
     virtual bool AddSignal(uint signal_id) = 0;
     virtual bool ReadData(uchar &status, QList<EDTel_SignalData> **list, bool logging = true) = 0;
 
-    virtual bool ReadDataToBuffer(TelStatistics &statistics, bool logging = true) = 0;
+    virtual bool ReadDataToBuffer(TelStatistics &statistics, QString& command, EDCommand::EDCommandResult& result, bool logging = true) = 0;
     virtual void ClearReadDataBuffer() = 0;
     virtual QList<EDTel_SignalDataBuffer> &getDataBuffer() = 0;
 
@@ -73,7 +76,7 @@ public:
     virtual bool AddSignal(uint signal_id);
     virtual bool ReadData(uchar &status, QList<EDTel_SignalData> **list, bool logging = true);
 
-    virtual bool ReadDataToBuffer(TelStatistics &statistics, bool logging = true);
+    virtual bool ReadDataToBuffer(TelStatistics &statistics, QString& command, EDCommand::EDCommandResult& result, bool logging = true);
     virtual void ClearReadDataBuffer();
     virtual QList<EDTel_SignalDataBuffer> &getDataBuffer();
 
@@ -84,7 +87,7 @@ public:
     virtual EDTelMode getState() const;
 
 private:
-    bool read_data(uchar &status, uint &num_samples, QByteArray &data, bool logging);
+    bool read_data(uchar &status, uint &num_samples, QByteArray &data, QString& command, EDCommand::EDCommandResult& result, bool logging);
     bool read_descr();
     bool set_mode(EDTelMode mode, ulong coef, uint frame_size);
 

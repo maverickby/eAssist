@@ -36,6 +36,7 @@ private:
    bool m_pause;
 
    int m_num_last_chars;
+   int written_lines_count;
 };
 
 #endif // DOCKLOGGER_H

@@ -460,6 +460,8 @@ void SignalsTree::clicked_fix(bool checked)
 //--------------------------------------------------------------------------------------------
 void SignalsTree::clicked_intelemetry(bool checked)
 {
+	if (m_sig_selected == nullptr)
+		return;
     QString tmp = (checked)?" adding to telemetry":" removing from telemetry";
     logger().WriteLn("Signal " + m_sig_selected->getDescriptor().name + tmp, Qt::gray);
 

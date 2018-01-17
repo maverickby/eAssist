@@ -3,6 +3,9 @@
 
 #include <QDialog>
 #include "Settings.h"
+#include "mainwindow.h"
+
+class MainWindow;
 
 namespace Ui {
 class SettingsDlg;
@@ -20,10 +23,12 @@ public:
 
 private:
     Ui::SettingsDlg *ui;
+	MainWindow* mainWIndow;
 
 private slots:
     void groupboxComPort_clicked(bool state);
     void groupboxUDP_clicked(bool state);
+    void on_buttonBox_clicked(QAbstractButton *button);
 };
 
 #endif // SETTINGSDLG_H

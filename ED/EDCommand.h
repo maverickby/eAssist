@@ -9,7 +9,7 @@ class EDCommand
 public:
 
     typedef enum { CR_Success, CR_NotSuccess, CR_BadAck, CR_TimeOut, CR_BadData, CR_Overflow,
-                   CR_BadCheckSum, CR_Waiting, CR_Unknown, CR_BadWrapper } EDCommandResultState;
+		CR_BadCheckSum, CR_Waiting, CR_Unknown, CR_BadWrapper, CR_E_READ_FAILED } EDCommandResultState;
 
     typedef struct
     {

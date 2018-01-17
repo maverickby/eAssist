@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     addDockWidget(Qt::RightDockWidgetArea, m_signals_ctrl);
     //m_signals_ctrl->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-    m_telemetry = new TelemetryWidget(&m_tabs, *m_ed);
+    m_telemetry = new TelemetryWidget(&m_tabs, *m_ed, this);
     m_tabs.addTab(m_telemetry, "Telemetry");
     setCentralWidget(&m_tabs);
 
@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // restore settings
     settings().Restore(m_applicationdirpath);
     update_on_change_settings();
+	//m_telemetry->m_toolbar
 }
 //-----------------------------------------------------------------------------------------
 MainWindow::~MainWindow()
@@ -59,10 +60,14 @@ MainWindow::~MainWindow()
 
     delete ui;
 
-    delete m_firmware;
-    delete m_telemetry;
-    delete m_ed;
-    delete m_interface;
+	if(m_firmware)
+		delete m_firmware;
+	if (m_telemetry)
+		delete m_telemetry;
+	if (m_ed)
+		delete m_ed;
+	if (m_interface)
+		delete m_interface;
 }
 //-----------------------------------------------------------------------------------------
 void MainWindow::CreateActions()
@@ -231,7 +236,7 @@ bool MainWindow::get_device_id(int &device_id)
 {
     if(devicesComboBox->count() == 0)
     {
-        logger().WriteLn("Imposible perfom command: no devices selected", Qt::red);
+        logger().WriteLn("Impossible perform command: no devices selected", Qt::red);
         return false;
     }
     device_id = devicesComboBox->currentIndex();
@@ -240,7 +245,15 @@ bool MainWindow::get_device_id(int &device_id)
 //-----------------------------------------------------------------------------------------
 void MainWindow::update_on_change_settings()
 {
-    delete m_interface;
+	int lastErr = 0;
+	if (!qobject_cast<EDUdpInterface *>(m_interface))
+		lastErr = ((QextSerialBase*)m_interface)->lastError();
+	if (lastErr != E_READ_FAILED)
+		delete m_interface;
+	else
+		throw "QIODevice read E_READ_FAILED";
+
+    //delete m_interface;
 
 	Settings &set = settings();
 	UDP_Settings udp_set = set.getUDPSettings();
@@ -273,7 +286,7 @@ void MainWindow::update_on_change_settings()
 
     } else
     {
-        throw "Wrang interface type";
+        throw "Wrong interface type";
     }
 
     m_ed->setWrapperSettings(wrp_set.enable, wrp_set.local_address, wrp_set.remote_address);
@@ -282,6 +295,20 @@ void MainWindow::update_on_change_settings()
     m_ed->setTimeoutDescriptor(set.getTimeoutDescriptor());
 }
 //-----------------------------------------------------------------------------------------
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	m_signals_ctrl->getSygnalsWidget()->setCycleRead(false);
+	m_telemetry->stop();
+	m_telemetry->getTelemetry()->StopThreadTelemetryReadData();//стопануть поток телеметрии ThreadTelReadData
+	m_ed->getCommandDispatcher()->stop();
+
+	delete m_firmware; m_firmware = NULL;
+	delete m_telemetry; m_telemetry = NULL;
+	delete m_ed; m_ed = NULL;
+	delete m_interface; m_interface = NULL;
+	event->accept();
+}
+
 void MainWindow::setProgressValue(unsigned int progress)
 {
     m_progressbar->setValue(progress);
@@ -290,6 +317,7 @@ void MainWindow::setProgressValue(unsigned int progress)
 void MainWindow::setProgressVisible(bool state)
 {
     act_progress->setVisible(state);
+	m_progressbar->setVisible(state);
 }
 //-----------------------------------------------------------------------------------------
 void MainWindow::setProgressParam(unsigned int min_value, unsigned int max_value)
@@ -342,6 +370,11 @@ void MainWindow::sysScan()
 {
     devicesComboBox->clear();
 
+	//остановить циклическое чтение
+	m_signals_ctrl->getSygnalsWidget()->setCycleRead(false);
+	m_signals_ctrl->getAct_cycleread()->setChecked(false);
+
+	//сканирование
     m_ed->Scan();
 
     // *** Adjust GUI for detected features
@@ -417,11 +450,14 @@ void MainWindow::toolsViewFirmwareDump()
 //-----------------------------------------------------------------------------------------
 void MainWindow::toolsViewSettings()
 {
+	m_signals_ctrl->getAct_cycleread()->setChecked(false);
+	m_signals_ctrl->getSygnalsWidget()->setCycleRead(false);
     logger().WriteLn("Open settings...", Qt::gray);
     if(settings_dlg->Execute())
-        // new settings aproved
+    // new settings approved
     {
         update_on_change_settings();
+		settings().Save(m_applicationdirpath);
     }
 }
 //-----------------------------------------------------------------------------------------
@@ -441,5 +477,10 @@ void MainWindow::toolCode2()
     if(!opened) m_interface->open(QIODevice::ReadWrite);
         m_interface->write(code2.data(), code2.size());
     if(!opened) m_interface->close();
+}
+
+QString* MainWindow::getApplicationDirPath()
+{
+	return &m_applicationdirpath;
 }
 

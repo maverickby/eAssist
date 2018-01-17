@@ -144,33 +144,47 @@ void SignalsWidget::readSignals()
     if(m_signals_list.size() > 0)
     {
         m_ed->setActiveInterface(true);
-        for(int i = 0; i < size; i++)
+        for(int i = 0; i < m_signals_list.size(); i++)
         {
             sig = m_signals_list[i];
-            pWidgetCtrl = m_list_ctrls.value(i);
-            name = pWidgetCtrl->metaObject()->className();
+            //pWidgetCtrl = m_list_ctrls.value(i);
+            //name = pWidgetCtrl->metaObject()->className();
 
             bool pause_tmp = logger().getPauseLogging();
             logger().setPauseLogging(true);
-                bool res = m_ed->Signals().getSignalValueStr(*sig, tmp_value, m_viewhex);
+            bool res = m_ed->Signals().getSignalValueStr(*sig, tmp_value, m_viewhex);
+
+            pWidgetCtrl = m_list_ctrls.value(i);
+
+            if(pWidgetCtrl == 0 || m_list_ctrls.size()<size || m_signals_list.size()<size)
+            {
+                m_ed->setActiveInterface(false);
+                connect(m_signalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(ctrl_changed(QWidget*)));
+                changed_clear();
+                return;
+            }
+
+            name = pWidgetCtrl->metaObject()->className();
             logger().setPauseLogging(pause_tmp);
+
             if(res)
             {
-                if(name.toLatin1() == "QLineEdit")
+                if(qobject_cast<QLineEdit *>(pWidgetCtrl) && name.toLatin1() == "QLineEdit")
                 {
 					static_cast<QLineEdit*>(pWidgetCtrl)->setText(tmp_value);
                 }
-                else if(name.toLatin1() == "QCheckBox")
+                else if(qobject_cast<QCheckBox *>(pWidgetCtrl) && name.toLatin1() == "QCheckBox")
                 {
 					static_cast<QCheckBox*>(pWidgetCtrl)->setChecked(*static_cast<const bool*>(sig->getValue()));
                 }
             } else
             {
-				if (name.toLatin1() == "QLineEdit") static_cast<QLineEdit*>(pWidgetCtrl)->setText("----");
-				else if (name.toLatin1() == "QCheckBox") static_cast<QCheckBox*>(pWidgetCtrl)->setChecked(false);
+				//if (name.toLatin1() == "QLineEdit") static_cast<QLineEdit*>(pWidgetCtrl)->setText("----");
+				//else if (name.toLatin1() == "QCheckBox") static_cast<QCheckBox*>(pWidgetCtrl)->setChecked(false);
             }
+            pWidgetCtrl=0;
         }
-        m_ed->setActiveInterface(false);
+        //m_ed->setActiveInterface(false);
     }
 
     connect(m_signalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(ctrl_changed(QWidget*)));
@@ -241,7 +255,7 @@ void SignalsWidget::setCycleRead(bool value)
     else
     {
         m_timer->stop();
-        logger().WriteLn("Stop cycle read sugnals", Qt::black);
+        logger().WriteLn("Stop cycle read signals", Qt::black);
     }
 }
 //-------------------------------------------------------------------------------------------

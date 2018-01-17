@@ -13,14 +13,23 @@ ThreadTelReadData::ThreadTelReadData(EDTel *telgrp):
     m_statistics.state_wait = 0;
 
     setTerminationEnabled(false);
+	qRegisterMetaType<Qt::GlobalColor>("Qt::GlobalColor");
+	qRegisterMetaType<EDCommand::EDCommandResult>("EDCommand::EDCommandResult");
+
 }
 //---------------------------------------------------------------------------------------------------------
 void ThreadTelReadData::run()
 {
+	QString command;
+	EDCommand::EDCommandResult result;
     while(!m_stop_request)
     {
         mutex.lock();
-            m_telgrp->ReadDataToBuffer(m_statistics, false);
+		if (m_telgrp->ReadDataToBuffer(m_statistics, command, result, false) != true)// in case off error - show it in log
+		{
+			emit SignalLoggerWrite(command + "...", Qt::black);
+			emit SignalLoggerWriteCommandResult(result);
+		}
         mutex.unlock();
 
         if(m_period > 0) this->usleep(m_period);

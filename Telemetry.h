@@ -18,6 +18,7 @@ public:
     void Pause();
     void Stop();
     void setPeriod(uint32_t value);
+	void StopThreadTelemetryReadData();
 
     void setSignalMode(const EDSignal *signal);
     void Clear();
@@ -44,7 +45,7 @@ private:
     QTimer m_timer;
     bool request_to_stop;
 
-    ThreadTelReadData m_thred_readdata;
+    ThreadTelReadData m_threadTelReadData;//поток для телеметрии сигналов
 
     TelStatistics m_statistics;
 
@@ -58,6 +59,10 @@ public slots:
 
 private slots:
     void tick();
+
+private slots:
+void loggerWrite(const QString &str, Qt::GlobalColor color);
+void loggerWriteCommandResult(EDCommand::EDCommandResult result);
 
 };
 

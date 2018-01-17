@@ -32,11 +32,17 @@ public:
     virtual void setProgressValue(unsigned int progress);
     virtual void setProgressVisible(bool state);
     virtual void setProgressParam(unsigned int min_value, unsigned int max_value);
+	QString* getApplicationDirPath();
+	inline QMenu * getMenu_System() {return m_System;}
+	inline QMenu * getMenu_Program() { return m_Prog; }
+	inline QMenu * getMenu_View() { return m_View; }
+	inline QMenu * getMenu_Tools() { return m_Tools; }
     
 private:
     void CreateActions();
     void CreateMenu();
     void CreateToolBar();
+	void closeEvent(QCloseEvent *event);
 
     bool get_device_id(int & device_id);
 
@@ -48,6 +54,7 @@ private:
     QComboBox *devicesComboBox;
 
     QMenu *m_System;
+	//QToolBar* m_systemToolBar;
     QAction *act_CheckChannel;
     QAction *act_DevInfo;
     QAction *act_Reset;
@@ -58,6 +65,7 @@ private:
     QAction *act_Scan;
 
     QMenu *m_Prog;
+	//QToolBar* m_programToolBar;
     QAction *act_Open;
     QAction *act_Save;
     QAction *act_Erase;
@@ -69,8 +77,10 @@ private:
     QAction *act_Auto;
 
     QMenu *m_View;
+	//QToolBar* m_viewToolBar;
 
     QMenu *m_Tools;
+	//QToolBar* m_toolsToolBar;
     QAction *act_OpenQML;
     QAction *act_ClearLog;
     QAction *act_ViewFirmwareDump;
@@ -95,6 +105,8 @@ private:
     TelemetryWidget *m_telemetry;
 
     QString m_applicationdirpath;
+
+	//QMutex mutex;
 
 private slots:
     void sysCheckChannel();

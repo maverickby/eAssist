@@ -8,8 +8,8 @@ TelemetryPlot::TelemetryPlot(QWidget *parent) :
     m_mouse_down(false),
     m_marker_left_position(-DBL_MAX),
     m_marker_right_position(DBL_MAX),
-    m_numpoints(1000),
-    m_runtime_autoscale(false)
+    m_numpoints(4000),
+    m_runtime_autoscale(true)
 {
     setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 

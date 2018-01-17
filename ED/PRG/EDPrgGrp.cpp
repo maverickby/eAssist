@@ -47,7 +47,7 @@ void EDPrgGrp::Scan()
     if(m_sysgrp == nullptr) return;
     if(!m_sysgrp->Available())
     {
-        logger().WriteLn("System command group not supported. Imposible use program commnads.", Qt::red);
+        logger().WriteLn("System command group not supported. Impossible to use program commands.", Qt::red);
         return;
     }
 
@@ -58,13 +58,13 @@ void EDPrgGrp::Scan()
     // request number of devices
     if(!(m_supported.ReqDevNum = ReqDevNum(devnum)))
     {
-        logger().WriteLn("Command ReqDevNum not supported. Imposible to continue...", Qt::red);
+        logger().WriteLn("Command ReqDevNum not supported. Impossible to continue...", Qt::red);
         m_sysgrp->SetScanMode(false);
         return;
     }
     if(devnum == 0)
     {
-        logger().WriteLn("There is no devices detected to program ", Qt::red);
+        logger().WriteLn("There are no devices detected for program ", Qt::red);
         m_sysgrp->SetScanMode(false);
         return;
     }
@@ -117,7 +117,7 @@ void EDPrgGrp::Scan()
     }
     else
     {
-        logger().WriteLn("Programming imposible: all requered commnads not found", Qt::red);
+        logger().WriteLn("Programming impossible: all required commands not found", Qt::red);
     }
 
     m_sysgrp->SetScanMode(false);
@@ -170,7 +170,7 @@ bool EDPrgGrp::Write(char device_id, const EDFirmware &firmware, EDPrgProgress &
 
     if(firmware_size == 0)
     {
-        logger().WriteLnMessageCritical("Firmwae data is empty/ Impossible to write it.", Qt::red);
+        logger().WriteLnMessageCritical("Firmware data is empty/ Impossible to write it.", Qt::red);
         return false;
     }
 
@@ -178,7 +178,7 @@ bool EDPrgGrp::Write(char device_id, const EDFirmware &firmware, EDPrgProgress &
 
     if(descr.prog_size < firmware_size)
     {
-        logger().WriteLnMessageCritical("Firmwae size is large then specified in descriptor.", Qt::red);
+        logger().WriteLnMessageCritical("Firmware size is bigger than specified in descriptor.", Qt::red);
         return false;
     }
 
@@ -320,7 +320,8 @@ bool EDPrgGrp::Read(char device_id, EDFirmware &firmware, uint size_to_read, EDP
 bool EDPrgGrp::FinishProg(char device_id)
 {
     com_finishprog->setDeviceID(device_id);
-    bool res = Run(com_finishprog);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_finishprog,result);
 
     return res;
 }
@@ -330,7 +331,8 @@ bool EDPrgGrp::PrepForProg(char device_id, bool erase)
     com_prepforprog->setDeviceID(device_id);
     com_prepforprog->setErase(erase);
     com_prepforprog->setPrepTimeout(m_descr_list[device_id].prep_timeout*1000);
-    bool res = Run(com_prepforprog);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_prepforprog,result);
 
     return res;
 }
@@ -339,7 +341,8 @@ bool EDPrgGrp::Read(char device_id, QByteArray &data)
 {
     com_read->setDeviceID(device_id);
     com_read->setRdBlockSize(m_descr_list[device_id].rd_block_size);
-    bool res = Run(com_read);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_read,result);
 
     if(res) data = com_read->getRxData();
     else data.clear();
@@ -350,7 +353,8 @@ bool EDPrgGrp::Read(char device_id, QByteArray &data)
 bool EDPrgGrp::ReadDescr(char device_id, EDDeviceDescriptor &descr)
 {
     com_readdescr->setDeviceID(device_id);
-    bool res = Run(com_readdescr);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_readdescr,result);
     if(res) descr = com_readdescr->Descriptor();
 
     return res;
@@ -359,7 +363,8 @@ bool EDPrgGrp::ReadDescr(char device_id, EDDeviceDescriptor &descr)
 bool EDPrgGrp::ReadID(char device_id, uint &id)
 {
     com_readid->setDeviceID(device_id);
-    bool res = Run(com_readid);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_readid,result);
 
     if(res) id = com_readid->getID();
     else id = 0;
@@ -369,7 +374,8 @@ bool EDPrgGrp::ReadID(char device_id, uint &id)
 //------------------------------------------------------------------------------------------------
 bool EDPrgGrp::ReqDevNum(char &devnum)
 {
-    bool res = Run(com_reqdevnum);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_reqdevnum,result);
 
     if(res) devnum = com_reqdevnum->getDevNum();
 
@@ -383,7 +389,8 @@ bool EDPrgGrp::Restart(char device_id)
     //logger().Write("Restart...", Qt::black);
 
     //logger().setPauseLogging(true);
-        bool res = Run(com_restart);
+	EDCommand::EDCommandResult result;
+        bool res = Run(com_restart,result);
     //logger().setPauseLogging(false);
 
     //if(res) logger().WriteLn("OK", Qt::green);
@@ -397,7 +404,8 @@ bool EDPrgGrp::Write(char device_id, const QByteArray &data)
     com_write->setDeviceID(device_id);
     com_write->setWrTimeout(m_descr_list[device_id].wr_timeout*1000);
     com_write->setWrData(data);
-    bool res = Run(com_write);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_write,result);
 
     return res;
 }

@@ -18,6 +18,7 @@ public:
 
     void setInterface(QIODevice *interface);
     QIODevice *getInterface();
+	EDCommandDispatcher *getCommandDispatcher();
     void setActiveInterface(bool active);
 
     void setWrapperSettings(bool enabled, unsigned char local_address, unsigned char remote_address);

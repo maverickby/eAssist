@@ -39,7 +39,7 @@ void EDSigGrp::Scan()
     if(m_sysgrp == nullptr) return;
     if(!m_sysgrp->Available())
     {
-        logger().WriteLn("System command group not supported. Imposible use program commnads.", Qt::red);
+        logger().WriteLn("System command group not supported. Impossible to use signals commands.", Qt::red);
         return;
     }
 
@@ -50,13 +50,13 @@ void EDSigGrp::Scan()
     // request number of signals
     if(!(m_supported.ReqNum = ReqNum(num)))
     {
-        logger().WriteLn("Command ReqNum not supported. Imposible to continue...", Qt::red);
+        logger().WriteLn("Command ReqNum not supported. Impossible to continue...", Qt::red);
         m_sysgrp->SetScanMode(false);
         return;
     }
     if(num == 0)
     {
-        logger().WriteLn("There is no signals detected ", Qt::red);
+        logger().WriteLn("There are no signals detected ", Qt::red);
         m_sysgrp->SetScanMode(false);
         return;
     }
@@ -85,7 +85,7 @@ void EDSigGrp::Scan()
         m_supported.SetSignature = false;// NOT YET IMPLEMENTED
     }else
     {
-        logger().WriteLn("Signals features imposible: all requered commnads not found", Qt::red);
+        logger().WriteLn("Impossible to get signals features: all required commands not found", Qt::red);
     }
 
     delete [] signal_tmp.value;
@@ -128,7 +128,8 @@ bool EDSigGrp::setSignal(const EDSignal &signal)
 
     logger().Write(signal.fullname + ":  ", Qt::gray);
 
-    bool res = Run(com_ctrl);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_ctrl,result);
 
     return res;
 }
@@ -141,9 +142,10 @@ bool EDSigGrp::getSignal(EDSignal &signal)
     com_readvalue->setValuePtr(signal.value);
     com_readvalue->setDescriptor(signal.descriptor);
 
-    logger().Write(signal.fullname + ":  ", Qt::gray);
+	logger().Write(signal.fullname + ":  ", Qt::gray);
 
-    bool res = Run(com_readvalue);
+	EDCommand::EDCommandResult result;
+	bool res = Run(com_readvalue, result);
 
     return res;
 }
@@ -206,7 +208,8 @@ bool EDSigGrp::ReqDescr(uint signal_id, EDSignalDescriptor &descriptor)
 {
     com_reqdescr->setSignalID(signal_id);
 
-    bool res = Run(com_reqdescr, false);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_reqdescr,result, false);
 
     descriptor = com_reqdescr->Descriptor();
 
@@ -215,7 +218,8 @@ bool EDSigGrp::ReqDescr(uint signal_id, EDSignalDescriptor &descriptor)
 //---------------------------------------------------------------------------------------------------
 bool EDSigGrp::ReqNum(uint &num)
 {
-    bool res = Run(com_reqnum);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_reqnum,result);
 
     num = com_reqnum->getNumSignals();
 
@@ -231,7 +235,8 @@ bool EDSigGrp::SetSignature(uint signal_id, uint coef, const QList<void *> &list
     com_setsignature->setValuesList(list);
     com_setsignature->setDescriptor(descriptor);
 
-    bool res = Run(com_setsignature);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_setsignature,result);
 
     return res;
 }

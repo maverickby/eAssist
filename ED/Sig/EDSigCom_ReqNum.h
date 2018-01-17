@@ -9,6 +9,7 @@ public:
     EDSigCom_ReqNum(const QString &name);
 
     uint getNumSignals() const;
+	void setNumSignals(int val);
 
 protected:
     virtual void get_tx_data(QByteArray &data);

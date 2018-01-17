@@ -13,6 +13,7 @@ SettingsDlg::SettingsDlg(QWidget *parent) :
 
     connect(ui->groupBoxComPort, SIGNAL(clicked(bool)), this, SLOT(groupboxComPort_clicked(bool)));
     connect(ui->groupBoxUDP,     SIGNAL(clicked(bool)), this, SLOT(groupboxUDP_clicked(bool)));
+	mainWIndow = (MainWindow*)parent;
 }
 //---------------------------------------------------------------------------------------------------
 SettingsDlg::~SettingsDlg()
@@ -109,5 +110,7 @@ void SettingsDlg::groupboxUDP_clicked(bool state)
 {
     ui->groupBoxComPort->setChecked(!state);
 }
-
-
+void SettingsDlg::on_buttonBox_clicked(QAbstractButton *button)
+{
+    settings().Save(*mainWIndow->getApplicationDirPath());
+}

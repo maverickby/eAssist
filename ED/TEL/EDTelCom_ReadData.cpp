@@ -61,7 +61,9 @@ EDCommand::EDCommandResultState EDTelCom_ReadData::process_rx_data(const QByteAr
 //-----------------------------------------------------------------------------------------------------
 bool EDTelCom_ReadData::isReadyFinish(const QByteArray &data) const
 {
-	uint num_samples = static_cast<uchar>(data[1]) | (static_cast<uchar>(data[2]) << 8);
+	uint num_samples = 0;
+	if(data.size()>=3)
+		num_samples = static_cast<uchar>(data[1]) | (static_cast<uchar>(data[2]) << 8);
 
     return data.size() == (m_sample_size*num_samples + 5);
 }

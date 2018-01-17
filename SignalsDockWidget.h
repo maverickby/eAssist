@@ -15,6 +15,8 @@ class SignalsDockWidget : public QDockWidget
     Q_OBJECT
 public:
     explicit SignalsDockWidget(ED *ed, QWidget *parent = nullptr);
+	inline SignalsWidget   *getSygnalsWidget() {return m_container;}
+	inline QAction *getAct_cycleread() {return act_cycleread;};
     
 public slots:
     void setSignals(QVector<EDSignal*> &signals_list);

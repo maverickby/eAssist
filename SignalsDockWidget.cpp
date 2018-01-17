@@ -6,7 +6,7 @@ SignalsDockWidget::SignalsDockWidget(ED *ed, QWidget *parent) :
 {
     m_container = new SignalsWidget(ed, this);
 
-    this->setMinimumWidth(200);
+    this->setMinimumWidth(350);
 
     act_read = new QAction(tr("Read"), this);
     connect(act_read, SIGNAL(triggered()), this, SLOT(read()));

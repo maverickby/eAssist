@@ -15,9 +15,11 @@ DockLogger::DockLogger(QWidget *parent):
     text_browser->setReadOnly(true);
     text_browser->setWordWrapMode(QTextOption::WrapAnywhere);
     text_browser->setFont(QFont("Courier new", 10));
-    text_browser->document()->setMaximumBlockCount(MAX_NUM_RECORDS);
+    text_browser->document()->setMaximumBlockCount(0);
+	text_browser->document()->setUndoRedoEnabled(false);
 
     m_pause = false;
+	written_lines_count = 0;
 }
 //---------------------------------------------------------------------------------------------------------
 DockLogger::~DockLogger()
@@ -28,18 +30,18 @@ void DockLogger::Write(const QString &value, Qt::GlobalColor color)
 {
     if(m_pause)  return;
 
-    text_browser->setTextColor(QColor(color));
-    text_browser->insertPlainText(value);
+	text_browser->setTextColor(QColor(color));
+		text_browser->insertPlainText(value);
 }
 //-----------------------------------------------------------------------------------------------------
 void DockLogger::WriteLn(const QString &value, Qt::GlobalColor color)
 {
     if(m_pause)  return;
 
-    text_browser->moveCursor(QTextCursor::End); // move to the end of document
-    text_browser->setTextColor(QColor(color));
-    text_browser->insertPlainText(value);
-    text_browser->append("");
+	text_browser->moveCursor(QTextCursor::End); // move to the end of document
+	text_browser->setTextColor(QColor(color));
+	text_browser->insertPlainText(value);
+	text_browser->append("");
 }
 //-----------------------------------------------------------------------------------------------------
 void DockLogger::WriteLnMessage(const QString &value, Qt::GlobalColor color)
@@ -78,7 +80,8 @@ void DockLogger::WriteCommandResult(EDCommand::EDCommandResult result)
         case EDCommand::CR_Waiting:        tmp = "waiting";         col = Qt::yellow;break;
         case EDCommand::CR_Unknown:        tmp = "unknown";         col = Qt::yellow;break;
         case EDCommand::CR_BadWrapper:     tmp = "bad wrapper";     col = Qt::red;   break;
-    default:                    tmp = "...";            col = Qt::yellow;break;
+		case EDCommand::CR_E_READ_FAILED:  tmp = "read failed";     col = Qt::red;   break;			
+		default:                           tmp = "...";             col = Qt::yellow;break;
     }
 
     if( (size > 0) && settings().isShowResponce())

@@ -5,13 +5,16 @@
 #include <QMutex>
 #include <stdint.h>
 #include "EDCommand.h"
+#include <QThread>
 
-class EDCommandDispatcher
+class EDCommandDispatcher : public QThread
 {
 public:
     explicit EDCommandDispatcher(QIODevice *device);
 
     EDCommand::EDCommandResult Run(EDCommand *command);
+	void setCommand(EDCommand *command);
+	void run() Q_DECL_OVERRIDE;
     void setInterface(QIODevice *device);
 
     void setActive(bool value);
@@ -25,6 +28,9 @@ public:
     unsigned char getWrpLocalAddress() const;
     void setWrpRemoteAddress(unsigned char value);
     unsigned char getWrpRemoteAddress() const;
+	EDCommand::EDCommandResult GetCommandResult();
+	inline QMutex* getMutex() { return &mutex; }
+	void stop();
 
 protected:
     QByteArray wrap(const QByteArray &data);
@@ -36,10 +42,14 @@ private:
     static const quint64 max_answer_size = 10000;
 
     QMutex mutex;
+	bool m_stop_request;
 
     bool m_wrp_enable;
     unsigned char m_wrp_local_addr;
     unsigned char m_wrp_remote_addr;
+
+	EDCommand *m_command;
+	EDCommand::EDCommandResult m_commandResult;
 
 };
 

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef EDSIGGRP_H
 #define EDSIGGRP_H
 
@@ -37,6 +38,7 @@ public:
     bool setSignal(const EDSignal &signal);
     bool getSignal(EDSignal &signal);
     bool getSignal_str(EDSignal &signal, QString &value, bool hex = false);
+	inline EDSigCom_ReqNum *getCom_reqnum() {return com_reqnum;	}
 
 private:
     bool SetSignature(uint signal_id, uint coef,  const QList<void*> &list, const EDSignalDescriptor &descriptor);// NOT YET IMPLEMENTED

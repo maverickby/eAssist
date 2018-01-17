@@ -1,5 +1,6 @@
 #include "EDTelGrp.h"
 #include "../EDLogger.h"
+#include "threadtelreaddata.h"
 
 //------------------------------------------------------------------------------------------------
 EDTelGrp::EDTelGrp(EDCommandDispatcher *dispatcher, EDSysGrp *sysgrp, EDSignalsList *siglist):
@@ -46,14 +47,14 @@ void EDTelGrp::Scan()
     if(m_sysgrp == nullptr) return;
     if(!m_sysgrp->Available())
     {
-        logger().WriteLn("System command group not supported. Imposible use telemetry commnads.", Qt::red);
+        logger().WriteLn("System command group not supported. Impossible to use telemetry commands.", Qt::red);
         return;
     }
 
     if(m_siglist == nullptr) return;
     if(m_siglist->count() == 0)
     {
-        logger().WriteLn("Signals list empty. Imposible use telemetry commnads.", Qt::red);
+        logger().WriteLn("Signals list empty. Impossible use telemetry commands.", Qt::red);
         return;
     }
 
@@ -81,10 +82,12 @@ void EDTelGrp::Scan()
             uchar tmp_status;
             uint tmp_num_samples;
             QByteArray tmp_data;
-            m_supported.ReadData = read_data(tmp_status, tmp_num_samples, tmp_data, true);
+			QString command;
+			EDCommand::EDCommandResult result;
+            m_supported.ReadData = read_data(tmp_status, tmp_num_samples, tmp_data, command,result,true);
         } else
         {
-             logger().WriteLn("Telemetry imposible: all requered commnads not found", Qt::red);
+             logger().WriteLn("Telemetry impossible: all required commands not found", Qt::red);
         }
 
         m_sysgrp->SetScanMode(false);
@@ -127,7 +130,8 @@ bool EDTelGrp::AddSignal(uint signal_id)
 
     logger().Write(signal->getDescriptor().name + ": ", Qt::gray);
 
-    bool res = Run(com_addsignal);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_addsignal,result);
     if(res && !m_sysgrp->isScanMode())
     {
         m_sample_size += signal->getSize();
@@ -149,7 +153,9 @@ bool EDTelGrp::ReadData(uchar &status, QList<EDTel_SignalData> **list, bool logg
     uint num_signals = m_data_list.size();
     QByteArray data;
 
-    bool res = read_data(status, num_samples, data, logging);
+	QString command;
+	EDCommand::EDCommandResult result;
+    bool res = read_data(status, num_samples, data,command,result, logging);
 
     if(res)
     {
@@ -183,7 +189,7 @@ bool EDTelGrp::ReadData(uchar &status, QList<EDTel_SignalData> **list, bool logg
     return res;
 }
 //------------------------------------------------------------------------------------------------
-bool EDTelGrp::ReadDataToBuffer(TelStatistics &statistics, bool logging)
+bool EDTelGrp::ReadDataToBuffer(TelStatistics &statistics, QString& command, EDCommand::EDCommandResult& result, bool logging)
 {
     uint num_samples = 0;
     uint num_signals = m_data_buffer_list.size();
@@ -198,7 +204,7 @@ bool EDTelGrp::ReadDataToBuffer(TelStatistics &statistics, bool logging)
     bool status_wait;
     bool status_frame_err;
 
-    bool res = read_data(status, num_samples, data, logging);
+    bool res = read_data(status, num_samples, data, command, result,logging);
 
     if(res)
     {
@@ -318,13 +324,14 @@ EDTelMode EDTelGrp::getState() const
     return m_state;
 }
 //------------------------------------------------------------------------------------------------
-bool EDTelGrp::read_data(uchar &status, uint &num_samples, QByteArray &data, bool logging)
+bool EDTelGrp::read_data(uchar &status, uint &num_samples, QByteArray &data, QString& command, EDCommand::EDCommandResult& result, bool logging)
 {
     com_readdata->setSampleSize(m_sample_size);
+	command = com_readdata->getName();
 
     bool res;
 
-    res = Run(com_readdata, logging);
+    res = Run(com_readdata, result, logging);
 
     if(res)
     {
@@ -338,7 +345,8 @@ bool EDTelGrp::read_data(uchar &status, uint &num_samples, QByteArray &data, boo
 //------------------------------------------------------------------------------------------------
 bool EDTelGrp::read_descr()
 {
-    bool res = Run(com_readdescr);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_readdescr,result);
 
     if(res)
     {
@@ -354,7 +362,8 @@ bool EDTelGrp::set_mode(EDTelMode mode, ulong coef, uint frame_size)
     com_setmode->setDivCoef(coef);
     com_setmode->setFrameSize(frame_size);
 
-    bool res = Run(com_setmode);
+	EDCommand::EDCommandResult result;
+    bool res = Run(com_setmode, result);
 
     return res;
 }

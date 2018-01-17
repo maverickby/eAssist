@@ -1,3 +1,4 @@
+#pragma once
 #ifndef THREADTELREADDATA_H
 #define THREADTELREADDATA_H
 
@@ -7,6 +8,7 @@
 #include "ED/TEL/EDTelGrp.h"
 #include "ED/TEL/EDTel_SignalDataBuffer.h"
 
+//поток для телеметрии сигналов
 class ThreadTelReadData : public QThread
 {
     Q_OBJECT
@@ -28,6 +30,9 @@ private:
     TelStatistics m_statistics;
     bool m_stop_request;
     uint32_t m_period;
+signals:
+	void SignalLoggerWrite(const QString &, Qt::GlobalColor);
+	void SignalLoggerWriteCommandResult(EDCommand::EDCommandResult);
 };
 
 #endif // THREADTELREADDATA_H

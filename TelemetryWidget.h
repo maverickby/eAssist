@@ -14,18 +14,24 @@
 #include "ED/ed.h"
 #include "TelemetryPlot.h"
 #include "Telemetry.h"
+//#include "mainwindow.h"
 
 #define DRAW_TIMER_PERIOD 25
+
+class MainWindow;
 
 // Telemetry_t - bridge from DSPA to Plot subsystem
 class TelemetryWidget: public QWidget
 {
     Q_OBJECT
 public:
-    explicit TelemetryWidget(QWidget *parent, ED & ed);
+    explicit TelemetryWidget(QWidget *parent, ED & ed, MainWindow* mainWin);
     ~TelemetryWidget();
 
     void setPeriod(uint32_t value);
+	void stop();
+	Telemetry* getTelemetry();
+	
 
 private:
     void Clear();
@@ -59,6 +65,7 @@ private:
     TelStatistics m_statistics;
 
     ED & m_ed;
+	MainWindow* m_mainWindow;
     int m_numpoints;
 
 private slots:

@@ -2,6 +2,7 @@
 #include "Telemetry.h"
 #include "ED/EDLogger.h"
 #include "Settings.h"
+#include "threadtelreaddata.h"
 
 #define TIMER_INTERVAL 40
 
@@ -12,8 +13,8 @@ Telemetry::Telemetry(ED *ed, QObject *parent) :
     m_running(false),
     m_wrapmode(true),
     request_to_stop(false),
-    m_numpoints(1000),
-    m_thred_readdata(&m_ed->Tel())
+    m_numpoints(4000),
+    m_threadTelReadData(&m_ed->Tel())
 {
     // timer
     m_timer.setInterval(TIMER_INTERVAL);
@@ -26,7 +27,7 @@ Telemetry::Telemetry(ED *ed, QObject *parent) :
 //--------------------------------------------------------------------------------------------
 Telemetry::~Telemetry()
 {
-    m_thred_readdata.stop();
+    m_threadTelReadData.stop();
     Clear();
 }
 //--------------------------------------------------------------------------------------------
@@ -116,39 +117,42 @@ void Telemetry::tick()
 {
     int num_signals = m_tel_signals.size();
 
-    m_thred_readdata.lock();
-        m_statistics = m_thred_readdata.getStatistics();
-    m_thred_readdata.unlock();
+    m_threadTelReadData.lock();
+        m_statistics = m_threadTelReadData.getStatistics();
+    m_threadTelReadData.unlock();
 
-    for(int s = 0; s < num_signals; s++)
-    {
-        EDTel_SignalDataBuffer *buffer = &(*tel_buffer)[s];
+	if (tel_buffer->size() > 0)//Добавление в телеметрию сигнала при запущенной телеметрии другого сигнала приводило к падению приложения
+	{
+		for (int s = 0; s < num_signals && s < tel_buffer->size(); s++)
+		{
+			EDTel_SignalDataBuffer *buffer = &(*tel_buffer)[s];
 
-        m_thred_readdata.lock();
-            int num_samples = buffer->getNumSamples();
-            for(int i = 0; i < num_samples; i++)
-            {
-                switch (m_ed->Signals().at(m_tel_signals.at(s)).getDescriptor().type)
-                {
-                case STYPE_BOOL:  m_tel_data[s]->addData( buffer->getValue<bool>(i)     );   break;
-                case STYPE_BYTE:  m_tel_data[s]->addData( buffer->getValue<uint8_t>(i)  );   break;
-                case STYPE_UINT:  m_tel_data[s]->addData( buffer->getValue<uint16_t>(i) );   break;
-                case STYPE_INT:   m_tel_data[s]->addData( buffer->getValue<int16_t>(i)  );   break;
-                case STYPE_LONG:  m_tel_data[s]->addData( buffer->getValue<int32_t>(i)  );   break;
-                case STYPE_ULONG: m_tel_data[s]->addData( buffer->getValue<uint32_t>(i) );   break;
-                case STYPE_FLOAT: m_tel_data[s]->addData( buffer->getValue<float>(i)    );   break;
-                }
-            }
-            buffer->ClearSamples(); // clear buffered data
-        m_thred_readdata.unlock();
-    }
+			m_threadTelReadData.lock();
+			int num_samples = buffer->getNumSamples();
+			for (int i = 0; i < num_samples; i++)
+			{
+				switch (m_ed->Signals().at(m_tel_signals.at(s)).getDescriptor().type)
+				{
+				case STYPE_BOOL:  m_tel_data[s]->addData(buffer->getValue<bool>(i));   break;
+				case STYPE_BYTE:  m_tel_data[s]->addData(buffer->getValue<uint8_t>(i));   break;
+				case STYPE_UINT:  m_tel_data[s]->addData(buffer->getValue<uint16_t>(i));   break;
+				case STYPE_INT:   m_tel_data[s]->addData(buffer->getValue<int16_t>(i));   break;
+				case STYPE_LONG:  m_tel_data[s]->addData(buffer->getValue<int32_t>(i));   break;
+				case STYPE_ULONG: m_tel_data[s]->addData(buffer->getValue<uint32_t>(i));   break;
+				case STYPE_FLOAT: m_tel_data[s]->addData(buffer->getValue<float>(i));   break;
+				}
+			}
+			buffer->ClearSamples(); // clear buffered data
+			m_threadTelReadData.unlock();
+		}
+	}
 
     emit DataReady();
     emit Statistics(m_statistics);
 
     if(request_to_stop)
     {
-        m_thred_readdata.stop();
+        m_threadTelReadData.stop();
         m_ed->Tel().Stop();
         m_running = false;
         request_to_stop = false;
@@ -162,11 +166,11 @@ void Telemetry::Start(ulong coef)
 
     int size = m_tel_data.size();
     for(int i = 0; i < size; i++) m_tel_data[i]->clear();
-    m_thred_readdata.ResetStatistics();
+    m_threadTelReadData.ResetStatistics();
 
 	EDTel &tel = m_ed->Tel();
 
-    tel.Stop(); // stop telemetry for case when it started from previus session
+    tel.Stop(); // stop telemetry for case when it started from previous session
 
     if(m_tel_signals.size() == 0)
     {
@@ -199,14 +203,28 @@ void Telemetry::Start(ulong coef)
 
     m_timer.start(TIMER_INTERVAL);
 
-    m_thred_readdata.start(QThread::TimeCriticalPriority);
+	bool connectRes = false;
+	connectRes= connect(&m_threadTelReadData, SIGNAL(SignalLoggerWrite(const QString &, Qt::GlobalColor)), this, SLOT(loggerWrite(const QString &, Qt::GlobalColor)), Qt::QueuedConnection);
+	connectRes = connect(&m_threadTelReadData, SIGNAL(SignalLoggerWriteCommandResult(EDCommand::EDCommandResult)), this, SLOT(loggerWriteCommandResult(EDCommand::EDCommandResult)), Qt::QueuedConnection);
+
+    m_threadTelReadData.start(QThread::TimeCriticalPriority);
+}
+
+void Telemetry::loggerWrite(const QString &str, Qt::GlobalColor color)
+{
+	logger().Write(str, color);
+}
+
+void Telemetry::loggerWriteCommandResult(EDCommand::EDCommandResult result)
+{
+	logger().WriteCommandResult(result);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------
 void Telemetry::Pause()
 {
     if(!m_running) return;
 
-    m_thred_readdata.stop();
+    m_threadTelReadData.stop();
 
     m_timer.stop();
 
@@ -221,5 +239,14 @@ void Telemetry::Stop()
 //------------------------------------------------------------------------------------------------------------------------------------------------
 void Telemetry::setPeriod(uint32_t value)
 {
-    m_thred_readdata.setPeriod(value);
+    m_threadTelReadData.setPeriod(value);
+}
+
+
+void Telemetry::StopThreadTelemetryReadData()
+{
+	m_threadTelReadData.stop();
+	m_ed->Tel().Stop();
+	m_running = false;
+	request_to_stop = false;	
 }

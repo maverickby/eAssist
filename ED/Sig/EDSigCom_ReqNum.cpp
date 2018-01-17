@@ -33,4 +33,8 @@ uint EDSigCom_ReqNum::getNumSignals() const
 {
     return m_NumSignals;
 }
+void EDSigCom_ReqNum::setNumSignals(int val)
+{
+	m_NumSignals = val;
+}
 
